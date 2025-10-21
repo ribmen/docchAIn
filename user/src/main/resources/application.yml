@@ -18,8 +18,21 @@ spring:
 eureka:
   client:
     service-url:
-      default-zone: http://localhost:8761/eureka/
+      defaultZone: http://localhost:8761/eureka/
   instance:
     instance-id: ${random.value}
     prefer-ip-address: true
+
+document:
+  service:
+    url: lb://document-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
