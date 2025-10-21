@@ -1,12 +1,17 @@
 package com.docchain.document.api.controller;
 
 import com.docchain.document.api.model.DocumentInput;
+import com.docchain.document.api.model.DocumentResponseDto;
 import com.docchain.document.domain.model.Document;
+import com.docchain.document.domain.service.DocumentEditService;
 import com.docchain.document.domain.service.DocumentRegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -14,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class DocumentController {
     
     private final DocumentRegistrationService documentRegistrationService;
+    private final DocumentEditService documentEditService;
 
     @PostMapping
     public ResponseEntity<Document> createDocument(@RequestBody DocumentInput request) {
@@ -21,5 +27,45 @@ public class DocumentController {
             request
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(document);
+    }
+
+    @PostMapping("/owner/{ownerId}/bulk")
+    public ResponseEntity<List<DocumentResponseDto>> createManyDocuments(
+            @PathVariable UUID ownerId,
+            @RequestBody List<DocumentInput> request) {
+        List<DocumentResponseDto> documents = documentRegistrationService.createManyDocuments(request, ownerId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(documents);
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<Document>> getDocumentsByUserId(@PathVariable UUID ownerId) {
+
+        List<Document> documents = documentRegistrationService.listByOwner(ownerId);
+        return ResponseEntity.ok(documents);
+    }
+
+    @GetMapping("/{documentId}")
+    public ResponseEntity<Document> getDocument(@PathVariable UUID documentId) {
+        Document document = documentRegistrationService.findById(documentId);
+        return ResponseEntity.ok(document);
+    }
+
+    @PutMapping("/{documentId}")
+    public ResponseEntity<Document> editDocument(
+            @RequestParam UUID ownerId,
+            @PathVariable UUID documentId,
+            @RequestBody Document changes) {
+
+        Document updatedDocument = documentEditService.update(ownerId, documentId, changes);
+        return ResponseEntity.ok(updatedDocument);
+    }
+
+    @DeleteMapping("/{documentId}")
+    public ResponseEntity<Void> deleteDocument(
+            @RequestParam UUID ownerId,
+            @RequestParam UUID documentId) {
+
+        documentRegistrationService.delete(ownerId, documentId);
+        return ResponseEntity.noContent().build();
     }
 }

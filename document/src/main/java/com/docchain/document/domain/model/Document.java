@@ -13,6 +13,8 @@ import lombok.Setter;
 import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -58,7 +60,7 @@ public class Document extends AbstractAggregateRoot<Document> {
         document.setContent(content);
         document.setStatus(DocumentStatus.CREATED);
         document.setVersion(0);
-        document.setCreatedAt(OffsetDateTime.now());
+        document.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
         return document;
     }
 

@@ -1,10 +1,12 @@
 package com.docchain.document.domain.service;
 
 import com.docchain.document.api.model.DocumentInput;
+import com.docchain.document.api.model.DocumentResponseDto;
 import com.docchain.document.domain.model.Document;
 import com.docchain.document.domain.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,18 +30,26 @@ public class DocumentRegistrationService {
         return documentRepository.saveAndFlush(document);
     }
 
+    @Transactional
+    public List<DocumentResponseDto> createManyDocuments(List<DocumentInput> inputs, UUID ownerId) {
+        List<Document> documents = inputs
+                .stream()
+                .map(input -> Document.brandNew(
+                                ownerId,
+                                input.getTitle(),
+                                input.getContent())
+                        )
+                .toList();
+        documentRepository.saveAll(documents);
+
+        return documents.stream()
+                .map(DocumentResponseDto::from)
+                .toList();
+    }
+
     public Document findById(UUID documentId) {
         return documentRepository.findById(documentId)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found."));
-    }
-
-    public Document update(UUID ownerId, UUID documentId, Document changes) {
-        Document current = documentRepository.findByIdAndOwnerId(documentId, ownerId)
-                .orElseThrow(() -> new IllegalArgumentException("Documento não encontrado para o dono."));
-        // aplicar alterações necessárias
-        current.setTitle(changes.getTitle());
-        current.setContent(changes.getContent());
-        return documentRepository.save(current);
     }
 
     public void delete(UUID ownerId, UUID documentId) {
@@ -51,4 +61,5 @@ public class DocumentRegistrationService {
     public List<Document> listByOwner(UUID ownerId) {
         return documentRepository.findByOwnerId(ownerId);
     }
+
 }
