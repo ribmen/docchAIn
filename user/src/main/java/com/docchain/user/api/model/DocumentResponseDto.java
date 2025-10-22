@@ -1,5 +1,6 @@
 package com.docchain.user.api.model;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record DocumentResponseDto(

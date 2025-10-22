@@ -2,6 +2,7 @@ package com.docchain.user.domain.service;
 
 import com.docchain.user.api.model.CreateDocumentRequest;
 import com.docchain.user.api.model.DocumentResponseDto;
+import com.docchain.user.api.model.DocumentUpdateRequest;
 import com.docchain.user.domain.exception.DocumentServiceIntegrationException;
 import com.docchain.user.domain.exception.UserNotFoundException;
 import com.docchain.user.infrastructure.http.client.DocumentApiClient;
@@ -37,7 +38,6 @@ public class UserDocumentService {
         } catch (RestClientException e) {
             throw new DocumentServiceIntegrationException("Falha ao criar documento no serviço externo.", e);
         }
-
     }
 
     public List<DocumentResponseDto> createManyDocumentsForUser(UUID userId, List<CreateDocumentRequest> requests) {
@@ -66,6 +66,44 @@ public class UserDocumentService {
             return documentServiceClient.findAllDocumentsForUser(userId);
         } catch (RestClientException e) {
             throw new DocumentServiceIntegrationException("Falha ao buscar documentos do usuário no serviço externo.", e);
+        }
+    }
+
+    public List<DocumentResponseDto> findDocumentForUserByTitle(UUID userId, String docTitle) {
+
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(userId.toString());
+        }
+
+        try {
+            return documentServiceClient.findDocumentByUserAndDocName(userId, docTitle);
+        } catch (RestClientException e) {
+            throw new DocumentServiceIntegrationException("Falha ao buscar documento do usuário no serviço externo.", e);
+        }
+    }
+
+    public DocumentResponseDto updateDocumentForUser(UUID userId, UUID documentId, DocumentUpdateRequest updateRequest) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(userId.toString());
+        }
+
+        try {
+            return documentServiceClient.updateDocument(documentId, userId, updateRequest);
+        } catch (RestClientException e) {
+            throw new DocumentServiceIntegrationException("Falha ao atualizar documento no serviço externo.", e);
+        }
+    }
+
+    public void deleteDocumentForUser(UUID userId, UUID documentId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+
+        try {
+            documentServiceClient.deleteDocument(documentId, userId);
+            user.removeDocument(documentId);
+            userRepository.save(user);
+        } catch (RestClientException e) {
+            throw new DocumentServiceIntegrationException("Falha ao deletar documento no serviço externo.", e);
         }
     }
 

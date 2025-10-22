@@ -38,10 +38,25 @@ public class DocumentController {
     }
 
     @GetMapping("/owner/{ownerId}")
-    public ResponseEntity<List<Document>> getDocumentsByUserId(@PathVariable UUID ownerId) {
+    public ResponseEntity<List<DocumentResponseDto>> getDocumentsByUserId(@PathVariable UUID ownerId) {
 
         List<Document> documents = documentRegistrationService.listByOwner(ownerId);
-        return ResponseEntity.ok(documents);
+        return ResponseEntity.ok(
+                documents.stream()
+                        .map(DocumentResponseDto::from)
+                        .toList()
+        );
+    }
+
+    @GetMapping("/owner/search/{ownerId}")
+    public ResponseEntity<List<DocumentResponseDto>> findByOwnerIdAndDocTitleContaining(@PathVariable UUID ownerId, @RequestParam String docTitle) {
+
+        List<Document> documents = documentRegistrationService.findByOwnerIdAndDocTitleContaining(ownerId, docTitle);
+        return ResponseEntity.ok(
+                documents.stream()
+                        .map(DocumentResponseDto::from)
+                        .toList()
+        );
     }
 
     @GetMapping("/{documentId}")

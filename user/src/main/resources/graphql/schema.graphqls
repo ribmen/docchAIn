@@ -1,0 +1,25 @@
+type Query{
+    documentsByUser(userId: ID!): [Document!]!
+    findDocumentByUserAndDocName(userId: ID!, docTitle: String): [Document]
+}
+
+type Mutation {
+    updateDocument(userId: ID!, documentId: ID!, title: String, content: String, status: String): Document!
+    deleteDocument(userId: ID!, documentId: ID!): Boolean!
+}
+
+type Document {
+    id: ID
+    title: String
+    content: String
+    ownerId: ID
+    status: String
+    createdAt: String
+}
+
+type User {
+    username: String
+    fullName: String
+    email: String
+    createdAt: String
+}

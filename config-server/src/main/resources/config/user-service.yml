@@ -16,6 +16,16 @@ spring:
     url: jdbc:postgresql://localhost:5432/userdb
     username: postgres
     password: postgres
+  graphql:
+    graphiql:
+      enabled: true
+    path: /graphql
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 eureka:
   client:

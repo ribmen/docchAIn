@@ -62,4 +62,8 @@ public class DocumentRegistrationService {
         return documentRepository.findByOwnerId(ownerId);
     }
 
+    public List<Document> findByOwnerIdAndDocTitleContaining(UUID ownerId, String docTitle) {
+        return documentRepository.findByOwnerIdAndDocTitle(ownerId, docTitle)
+                .orElseThrow(() -> new IllegalArgumentException("Document not found for the owner or by title."));
+    }
 }
