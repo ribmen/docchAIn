@@ -37,7 +37,7 @@ public interface DocumentApiClient {
                                       @RequestParam UUID ownerId,
                                       @RequestBody DocumentUpdateRequest changes);
 
-    @DeleteExchange("/{documentId}")
+    @DeleteExchange("/{ownerId}/{documentId}")
     void deleteDocument(@PathVariable UUID documentId,
-                       @RequestParam UUID ownerId);
+                       @PathVariable UUID ownerId);
 }

@@ -4,7 +4,7 @@ type Query{
 }
 
 type Mutation {
-    updateDocument(userId: ID!, documentId: ID!, title: String, content: String, status: String): Document!
+    updateDocument(userId: ID!, documentId: ID!, title: String, content: String): Document!
     deleteDocument(userId: ID!, documentId: ID!): Boolean!
 }
 

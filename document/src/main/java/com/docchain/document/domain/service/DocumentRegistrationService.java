@@ -53,6 +53,10 @@ public class DocumentRegistrationService {
     }
 
     public void delete(UUID ownerId, UUID documentId) {
+
+        if (ownerId == null) {
+            throw new IllegalArgumentException("Owner ID must be provided to delete a document.");
+        }
         Document current = documentRepository.findByIdAndOwnerId(documentId, ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("Documento não encontrado para o dono."));
         documentRepository.delete(current);

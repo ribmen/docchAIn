@@ -1,5 +1,6 @@
 package com.docchain.document.domain.service;
 
+import com.docchain.document.domain.enums.DocumentStatus;
 import com.docchain.document.domain.model.Document;
 import com.docchain.document.domain.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,9 @@ public class DocumentEditService {
         current.setContent(changes.getContent());
         current.setVersion(current.getVersion()+1);
         current.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        if (current.getStatus() == DocumentStatus.CREATED) {
+            current.changeStatusTo(DocumentStatus.EDITED);
+        }
         return documentRepository.save(current);
     }
 

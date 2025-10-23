@@ -83,7 +83,7 @@ public class UserDocumentsController {
         return ResponseEntity.ok(updatedDocument);
     }
 
-    @DeleteMapping("/{userId}/documents/{documentId}")
+    @DeleteMapping("/{userId}/{documentId}")
     public ResponseEntity<Void> deleteDocumentForUser(
             @PathVariable UUID userId,
             @PathVariable UUID documentId) {

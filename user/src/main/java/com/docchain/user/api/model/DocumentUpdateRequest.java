@@ -12,5 +12,4 @@ import lombok.NoArgsConstructor;
 public class DocumentUpdateRequest {
     private String title;
     private String content;
-    private String status;
 }

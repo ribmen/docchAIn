@@ -56,15 +56,13 @@ public class DocumentGraphqlController {
     public DocumentResponseDto updateDocument(@Argument UUID userId, 
                                               @Argument UUID documentId,
                                               @Argument String title,
-                                              @Argument String content,
-                                              @Argument String status) {
+                                              @Argument String content) {
 
         log.info("UPDATING DOCUMENT {} FOR USER {} >>> EVICTING CACHE <<<", documentId, userId);
 
         DocumentUpdateRequest updateRequest = DocumentUpdateRequest.builder()
                 .title(title)
                 .content(content)
-                .status(status)
                 .build();
 
         return userDocumentService.updateDocumentForUser(userId, documentId, updateRequest);

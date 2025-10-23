@@ -4,6 +4,9 @@ public enum DocumentStatus {
 
     CREATED,
     DRAFT,
+    EDITED,
+    APPROVED,
+    REJECTED,
     FINALIZED
 
 }

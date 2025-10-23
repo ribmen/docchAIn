@@ -66,19 +66,19 @@ public class DocumentController {
     }
 
     @PutMapping("/{documentId}")
-    public ResponseEntity<Document> editDocument(
+    public ResponseEntity<DocumentResponseDto> editDocument(
             @RequestParam UUID ownerId,
             @PathVariable UUID documentId,
             @RequestBody Document changes) {
 
         Document updatedDocument = documentEditService.update(ownerId, documentId, changes);
-        return ResponseEntity.ok(updatedDocument);
+        return ResponseEntity.ok(DocumentResponseDto.from(updatedDocument));
     }
 
-    @DeleteMapping("/{documentId}")
+    @DeleteMapping("/{ownerId}/{documentId}")
     public ResponseEntity<Void> deleteDocument(
-            @RequestParam UUID ownerId,
-            @RequestParam UUID documentId) {
+            @PathVariable UUID ownerId,
+            @PathVariable UUID documentId) {
 
         documentRegistrationService.delete(ownerId, documentId);
         return ResponseEntity.noContent().build();
