@@ -40,6 +40,25 @@ document:
     url: lb://document-service
 
 resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 3000ms
+        enable-exponential-backoff: false
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.client.ResourceAccessException  # Timeout, conexão recusada
+          - java.net.ConnectException                               # Falha de conexão
+          - java.net.SocketTimeoutException                         # Socket timeout
+          - java.lang.IllegalStateException                         # LoadBalancer sem instâncias
+        ignore-exceptions:
+          - org.springframework.web.client.HttpClientErrorException  # 4xx - erro do cliente
+          - com.docchain.user.domain.exception.UserNotFoundException # Erro de negócio
+    instances:
+      documentService:
+        base-config: default
+
   circuitbreaker:
     configs:
       default:
@@ -51,35 +70,15 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
         record-exceptions:
-          - org.springframework.web.client.RestClientException
-          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.HttpServerErrorException  # 5xx - erro do servidor
+          - org.springframework.web.client.ResourceAccessException   # Timeout, conexão
+          - java.util.concurrent.TimeoutException                    # Timeout geral
+          - java.io.IOException                                       # IO error
+          - java.lang.IllegalStateException                          # LoadBalancer sem instâncias
     instances:
       documentService:
         base-config: default
-  
-  retry:
-    configs:
-      default:
-        max-attempts: 3
-        wait-duration: 500ms
-        enable-exponential-backoff: true
-        exponential-backoff-multiplier: 2
-        retry-exceptions:
-          - org.springframework.web.client.RestClientException
-        ignore-exceptions:
-          - com.docchain.user.domain.exception.UserNotFoundException
-    instances:
-      documentService:
-        base-config: default
-  
-  timelimiter:
-    configs:
-      default:
-        timeout-duration: 5s
-        cancel-running-future: true
-    instances:
-      documentService:
-        base-config: default
+        wait-duration-in-open-state: 10s
 
 management:
   endpoints:
