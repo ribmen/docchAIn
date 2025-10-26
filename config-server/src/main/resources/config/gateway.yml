@@ -17,11 +17,58 @@ spring:
               predicates:
                 - Path=/api/v1/documents/**
                 - Method=GET,POST,PUT,DELETE,OPTIONS
+              metadata:
+                connect-timeout: 3000
+                response-timeout: 5s
             - id: user-service-route
               uri: lb://user-service
               predicates:
                 - Path=/users/**
                 - Method=GET,POST,PUT,DELETE,OPTIONS
+              metadata:
+                connect-timeout: 3000
+                response-timeout: 5s
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      user-service:
+        base-config: default
+      document-service:
+        base-config: default
+  
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+    instances:
+      user-service:
+        base-config: default
+      document-service:
+        base-config: default
+  
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 5s
+        cancel-running-future: true
+    instances:
+      user-service:
+        base-config: default
+      document-service:
+        base-config: default
 
 eureka:
   client:
@@ -34,8 +81,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,circuitbreakers,circuitbreakerevents,retries,retryevents
   metrics:
     tags:
       application: ${spring.application.name}
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
 
