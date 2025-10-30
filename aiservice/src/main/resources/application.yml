@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: ai-service
+  config:
+    import:
+      - "optional:dotenv:.env"
+      - configserver:http://localhost:8888
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}

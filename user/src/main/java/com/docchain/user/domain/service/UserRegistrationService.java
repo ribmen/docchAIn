@@ -36,6 +36,7 @@ public class UserRegistrationService {
         userRepository.saveAndFlush(user);
 
         UserResponseDto response = new UserResponseDto();
+        response.setId(user.getId());
         response.setFullName(user.getFullName());
         response.setEmail(user.getEmail().toString());
         response.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));

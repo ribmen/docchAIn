@@ -7,5 +7,4 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DocumentUtilsService {
 
-    // Serviços de conversão de formatos, privacidade e outras utilidades relacionadas a documentos
 }

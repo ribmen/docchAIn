@@ -4,6 +4,7 @@ import com.docchain.document.api.model.DocumentInput;
 import com.docchain.document.api.model.DocumentResponseDto;
 import com.docchain.document.domain.model.Document;
 import com.docchain.document.domain.repository.DocumentRepository;
+import com.docchain.document.infrastructure.pdf.MarkdownToPdfConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class DocumentRegistrationService {
 
     private final DocumentRepository documentRepository;
+    private final MarkdownToPdfConverter markdownToPdfConverter;
 
     public Document create(DocumentInput documentInput) {
         if (documentInput.getOwnerId() == null) {
@@ -69,5 +71,19 @@ public class DocumentRegistrationService {
     public List<Document> findByOwnerIdAndDocTitleContaining(UUID ownerId, String docTitle) {
         return documentRepository.findByOwnerIdAndDocTitle(ownerId, docTitle)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found for the owner or by title."));
+    }
+
+    @Transactional
+    public Document createWithMarkdown(UUID ownerId, String title, String markdownContent) {
+        if (ownerId == null) {
+            throw new IllegalArgumentException("Owner ID must be set to create a document.");
+        }
+
+        Document document = Document.brandNew(ownerId, title, markdownContent);
+
+        byte[] pdfBytes = markdownToPdfConverter.convertToPdf(markdownContent, title);
+        document.setPdfBin(pdfBytes);
+
+        return documentRepository.saveAndFlush(document);
     }
 }

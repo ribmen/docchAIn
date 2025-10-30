@@ -3,6 +3,8 @@ package com.docchain.user.api.controller;
 import com.docchain.user.api.model.CreateDocumentRequest;
 import com.docchain.user.api.model.DocumentResponseDto;
 import com.docchain.user.api.model.DocumentUpdateRequest;
+import com.docchain.user.api.model.GenerateDocumentAIRequest;
+import com.docchain.user.api.model.ReplicateDocumentAIRequest;
 import com.docchain.user.domain.service.UserDocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -90,5 +92,64 @@ public class UserDocumentsController {
 
         userDocumentService.deleteDocumentForUser(userId, documentId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{userId}/ai/generate")
+    public ResponseEntity<DocumentResponseDto> generateDocumentWithAI(
+            @PathVariable UUID userId,
+            @Valid @RequestBody GenerateDocumentAIRequest request) {
+
+        DocumentResponseDto document = userDocumentService.generateDocumentWithAI(
+                userId,
+                request.getPrompt(),
+                request.getAdditionalContext()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(document);
+    }
+
+    @PostMapping("/{userId}/ai/replicate/{documentId}")
+    public ResponseEntity<List<DocumentResponseDto>> replicateDocumentWithAI(
+            @PathVariable UUID userId,
+            @PathVariable UUID documentId,
+            @Valid @RequestBody ReplicateDocumentAIRequest request) {
+
+        List<DocumentResponseDto> documents = userDocumentService.replicateDocumentWithAI(
+                userId,
+                documentId,
+                request.getPurpose(),
+                request.getNumberOfReplicas()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(documents);
+    }
+
+    @PutMapping("/{userId}/ai/improve/{documentId}")
+    public ResponseEntity<DocumentResponseDto> improveDocumentWithAI(
+            @PathVariable UUID userId,
+            @PathVariable UUID documentId,
+            @RequestParam(required = false) String improvementGuidelines) {
+
+        DocumentResponseDto document = userDocumentService.improveDocumentWithAI(
+                userId,
+                documentId,
+                improvementGuidelines
+        );
+
+        return ResponseEntity.ok(document);
+    }
+
+    @PostMapping("/{userId}/ai/generate-markdown")
+    public ResponseEntity<DocumentResponseDto> generateMarkdownDocument(
+            @PathVariable UUID userId,
+            @Valid @RequestBody GenerateDocumentAIRequest request) {
+
+        DocumentResponseDto document = userDocumentService.generateAndStoreMarkdownDocument(
+                userId,
+                request.getPrompt(),
+                request.getAdditionalContext()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(document);
     }
 }

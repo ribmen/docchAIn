@@ -3,6 +3,7 @@ package com.docchain.user.domain.service;
 import com.docchain.user.api.model.CreateDocumentRequest;
 import com.docchain.user.api.model.DocumentResponseDto;
 import com.docchain.user.api.model.DocumentUpdateRequest;
+import com.docchain.user.api.model.GenerateDocumentAIRequest;
 import com.docchain.user.domain.exception.BadGatewayException;
 import com.docchain.user.domain.exception.ServiceUnavailableException;
 import com.docchain.user.domain.exception.UserNotFoundException;
@@ -27,12 +28,6 @@ public class UserDocumentService {
     private final UserRepository userRepository;
     private final DocumentApiClient documentServiceClient;
 
-    /**
-     * TRATAMENTO DE EXCEÇÕES:
-     * - ResourceAccessException: Timeout/conexão → ServiceUnavailable (503)
-     * - HttpServerErrorException: Erro 5xx → BadGateway (502)
-     * - CallNotPermittedException: Circuit breaker aberto → ServiceUnavailable (503)
-     */
     public DocumentResponseDto createDocumentForUser(UUID userId, String title, String content) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId.toString()));
@@ -196,6 +191,145 @@ public class UserDocumentService {
         } catch (IllegalStateException e) {
             log.error("Document service not available (LoadBalancer: no instances)", e);
             throw new ServiceUnavailableException("Document service not available", e);
+        }
+    }
+
+    public DocumentResponseDto generateDocumentWithAI(UUID userId, String prompt, String additionalContext) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+
+        try {
+            GenerateDocumentAIRequest request = new GenerateDocumentAIRequest(prompt, additionalContext);
+            DocumentResponseDto response = documentServiceClient.generateDocumentWithAI(userId, request);
+            
+            user.addDocument(response.id());
+            userRepository.save(user);
+            
+            return response;
+            
+        } catch (ResourceAccessException e) {
+            log.error("Timeout generating document with AI for user {}", userId, e);
+            throw new ServiceUnavailableException("Document service timeout", e);
+            
+        } catch (HttpServerErrorException e) {
+            log.error("Server error generating document with AI for user {}", userId, e);
+            throw new BadGatewayException("Document service error", e);
+            
+        } catch (CallNotPermittedException e) {
+            log.error("Circuit breaker is open for document service", e);
+            throw new ServiceUnavailableException("Document service temporarily unavailable", e);
+            
+        } catch (IllegalStateException e) {
+            log.error("Document service not available (LoadBalancer: no instances)", e);
+            throw new ServiceUnavailableException("Document service not available", e);
+        }
+    }
+
+    public List<DocumentResponseDto> replicateDocumentWithAI(
+            UUID userId,
+            UUID documentId,
+            String purpose,
+            int numberOfReplicas) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+
+        try {
+            List<DocumentResponseDto> responses = documentServiceClient.replicateDocumentWithAI(
+                    documentId,
+                    purpose,
+                    numberOfReplicas
+            );
+            
+            responses.forEach(doc -> user.addDocument(doc.id()));
+            userRepository.save(user);
+            
+            return responses;
+            
+        } catch (ResourceAccessException e) {
+            log.error("Timeout replicating document with AI for user {}", userId, e);
+            throw new ServiceUnavailableException("Document service timeout", e);
+            
+        } catch (HttpServerErrorException e) {
+            log.error("Server error replicating document with AI for user {}", userId, e);
+            throw new BadGatewayException("Document service error", e);
+            
+        } catch (CallNotPermittedException e) {
+            log.error("Circuit breaker is open for document service", e);
+            throw new ServiceUnavailableException("Document service temporarily unavailable", e);
+            
+        } catch (IllegalStateException e) {
+            log.error("Document service not available (LoadBalancer: no instances)", e);
+            throw new ServiceUnavailableException("Document service not available", e);
+        }
+    }
+
+    public DocumentResponseDto improveDocumentWithAI(
+            UUID userId,
+            UUID documentId,
+            String improvementGuidelines) {
+
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(userId.toString());
+        }
+
+        try {
+            return documentServiceClient.improveDocumentWithAI(documentId, improvementGuidelines);
+            
+        } catch (ResourceAccessException e) {
+            log.error("Timeout improving document with AI for user {}", userId, e);
+            throw new ServiceUnavailableException("Document service timeout", e);
+            
+        } catch (HttpServerErrorException e) {
+            log.error("Server error improving document with AI for user {}", userId, e);
+            throw new BadGatewayException("Document service error", e);
+            
+        } catch (CallNotPermittedException e) {
+            log.error("Circuit breaker is open for document service", e);
+            throw new ServiceUnavailableException("Document service temporarily unavailable", e);
+            
+        } catch (IllegalStateException e) {
+            log.error("Document service not available (LoadBalancer: no instances)", e);
+            throw new ServiceUnavailableException("Document service not available", e);
+        }
+    }
+
+    public DocumentResponseDto generateAndStoreMarkdownDocument(
+            UUID userId, 
+            String prompt, 
+            String additionalContext) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+
+        try {
+            log.info("Initiating markdown document generation for user: {}", userId);
+
+            GenerateDocumentAIRequest request = new GenerateDocumentAIRequest(prompt, additionalContext);
+            DocumentResponseDto response = documentServiceClient.generateMarkdownDocumentWithAI(userId, request);
+            
+            log.info("Markdown document with PDF created successfully. ID: {}", response.id());
+
+            user.addDocument(response.id());
+            userRepository.save(user);
+            
+            return response;
+            
+        } catch (ResourceAccessException e) {
+            log.error("Timeout generating markdown document for user {}", userId, e);
+            throw new ServiceUnavailableException("Service timeout during markdown document generation", e);
+            
+        } catch (HttpServerErrorException e) {
+            log.error("Server error generating markdown document for user {}", userId, e);
+            throw new BadGatewayException("Service error during markdown document generation", e);
+            
+        } catch (CallNotPermittedException e) {
+            log.error("Circuit breaker is open during markdown document generation", e);
+            throw new ServiceUnavailableException("Service temporarily unavailable", e);
+            
+        } catch (IllegalStateException e) {
+            log.error("Service not available during markdown document generation", e);
+            throw new ServiceUnavailableException("Service not available", e);
         }
     }
 }

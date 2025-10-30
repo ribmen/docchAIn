@@ -9,34 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Event Consumer para monitorar eventos do Circuit Breaker.
- * 
- * PROPÓSITO:
- * - Alertas: Notifica quando o circuito muda de estado (CRITICAL!)
- * - Diagnóstico: Ajuda a identificar quando serviços estão degradados
- * - Métricas: Base para dashboards e alertas de produção
- * 
- * COMO FUNCIONA:
- * 1. Registrado automaticamente pelo Resilience4j quando o Bean é criado
- * 2. Escuta quando uma instância de CircuitBreaker é adicionada ao registry
- * 3. Adiciona listeners para eventos críticos do circuito
- * 4. Loga com níveis adequados (WARN para mudanças de estado, ERROR para rejeições)
- * 
- * EVENTOS MONITORADOS:
- * - onStateTransition: Mudança de estado CLOSED ↔ OPEN ↔ HALF-OPEN (log WARN com emoji)
- * - onSuccess: Requisição bem-sucedida (log DEBUG, apenas para troubleshooting)
- * - onError: Requisição com erro (log ERROR)
- * - onCallNotPermitted: Requisição bloqueada (circuito OPEN) (log ERROR com emoji)
- * 
- * ESTADOS DO CIRCUIT BREAKER:
- * - CLOSED: Normal, requisições passam
- * - OPEN: Bloqueado, requisições rejeitadas imediatamente
- * - HALF-OPEN: Testando recuperação, permite algumas requisições
- * - DISABLED: Desabilitado (não usado normalmente)
- * - FORCED_OPEN: Forçado aberto manualmente
- * - METRICS_ONLY: Apenas coletando métricas
- */
 @Configuration
 @Slf4j
 public class CircuitBreakerEventConsumer {

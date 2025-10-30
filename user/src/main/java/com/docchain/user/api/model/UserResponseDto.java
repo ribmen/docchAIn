@@ -6,10 +6,12 @@ import lombok.Setter;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class UserResponseDto {
+    UUID id;
     String username;
     String fullName;
     String email;
@@ -17,6 +19,7 @@ public class UserResponseDto {
 
     public static UserResponseDto from(User user) {
         UserResponseDto dto = new UserResponseDto();
+        dto.setId(user.getId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail().toString());
         dto.setCreatedAt(user.getCreatedAt().atOffset(ZoneOffset.UTC));

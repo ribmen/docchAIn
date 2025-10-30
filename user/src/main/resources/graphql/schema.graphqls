@@ -4,8 +4,16 @@ type Query{
 }
 
 type Mutation {
+    createUser(fullName: String!, email: String!, passwordHash: String!): User!
+    createDocument(userId: ID!, title: String!, content: String!): Document!
+    
     updateDocument(userId: ID!, documentId: ID!, title: String, content: String): Document!
     deleteDocument(userId: ID!, documentId: ID!): Boolean!
+
+    generateDocumentWithAI(userId: ID!, prompt: String!, additionalContext: String): Document!
+    replicateDocumentWithAI(userId: ID!, documentId: ID!, purpose: String!, numberOfReplicas: Int!): [Document!]!
+    improveDocumentWithAI(userId: ID!, documentId: ID!, improvementGuidelines: String): Document!
+    generateMarkdownDocument(userId: ID!, prompt: String!, additionalContext: String): Document!
 }
 
 type Document {
@@ -18,6 +26,7 @@ type Document {
 }
 
 type User {
+    id: ID
     username: String
     fullName: String
     email: String

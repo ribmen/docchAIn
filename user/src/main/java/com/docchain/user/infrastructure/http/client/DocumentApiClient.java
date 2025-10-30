@@ -3,6 +3,7 @@ package com.docchain.user.infrastructure.http.client;
 import com.docchain.user.api.model.CreateDocumentRequest;
 import com.docchain.user.api.model.DocumentResponseDto;
 import com.docchain.user.api.model.DocumentUpdateRequest;
+import com.docchain.user.api.model.GenerateDocumentAIRequest;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,18 +18,6 @@ import org.springframework.web.service.annotation.PutExchange;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Cliente HTTP para comunicação com o Document Service.
- * 
- * IMPORTANTE: As anotações @Retry e @CircuitBreaker devem estar AQUI no client,
- * não no service. Isso segue o princípio de separação de responsabilidades:
- * - O Client (camada de infraestrutura) lida com resiliência de comunicação HTTP
- * - O Service (camada de domínio) lida com lógica de negócio
- * 
- * ORDEM DAS ANOTAÇÕES: @Retry ANTES de @CircuitBreaker
- * Motivo: Queremos tentar novamente (retry) antes de considerar o circuito aberto.
- * O fluxo é: Request → Retry (tenta 3x) → CircuitBreaker (monitora falhas)
- */
 @HttpExchange(url = "/api/v1/documents")
 public interface DocumentApiClient {
 
@@ -65,4 +54,29 @@ public interface DocumentApiClient {
     @CircuitBreaker(name = "documentService")
     void deleteDocument(@PathVariable UUID documentId,
                        @PathVariable UUID ownerId);
+
+    @PostExchange("/ai/generate")
+    @Retry(name = "documentService")
+    @CircuitBreaker(name = "documentService")
+    DocumentResponseDto generateDocumentWithAI(@RequestParam UUID ownerId,
+                                               @RequestBody GenerateDocumentAIRequest request);
+
+    @PostExchange("/ai/generate-markdown")
+    @Retry(name = "documentService")
+    @CircuitBreaker(name = "documentService")
+    DocumentResponseDto generateMarkdownDocumentWithAI(@RequestParam UUID ownerId,
+                                                       @RequestBody GenerateDocumentAIRequest request);
+
+    @PostExchange("/ai/replicate/{documentId}")
+    @Retry(name = "documentService")
+    @CircuitBreaker(name = "documentService")
+    List<DocumentResponseDto> replicateDocumentWithAI(@PathVariable UUID documentId,
+                                                      @RequestParam String purpose,
+                                                      @RequestParam int numberOfReplicas);
+
+    @PutExchange("/ai/improve/{documentId}")
+    @Retry(name = "documentService")
+    @CircuitBreaker(name = "documentService")
+    DocumentResponseDto improveDocumentWithAI(@PathVariable UUID documentId,
+                                              @RequestParam(required = false) String improvementGuidelines);
 }

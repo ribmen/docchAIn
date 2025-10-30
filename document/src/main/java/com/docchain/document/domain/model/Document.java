@@ -2,14 +2,18 @@ package com.docchain.document.domain.model;
 
 import com.docchain.document.domain.enums.DocumentStatus;
 import com.docchain.document.domain.enums.PrivacyStatus;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.OffsetDateTime;
@@ -32,7 +36,12 @@ public class Document extends AbstractAggregateRoot<Document> {
 
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "pdf_bin", columnDefinition = "BYTEA")
+    private byte[] pdfBin;
 
     private UUID ownerId;
 
@@ -66,5 +75,11 @@ public class Document extends AbstractAggregateRoot<Document> {
 
     public void changeStatusTo(DocumentStatus newStatus) {
         this.setStatus(newStatus);
+    }
+
+    public void updateContent(String newContent) {
+        this.setContent(newContent);
+        this.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        this.setVersion(this.version + 1);
     }
 }

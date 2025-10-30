@@ -43,18 +43,19 @@ resilience4j:
   retry:
     configs:
       default:
-        max-attempts: 3
-        wait-duration: 3000ms
+        max-attempts: 2
+        wait-duration: 5000ms
         enable-exponential-backoff: false
         exponential-backoff-multiplier: 2
         retry-exceptions:
-          - org.springframework.web.client.ResourceAccessException  # Timeout, conexão recusada
-          - java.net.ConnectException                               # Falha de conexão
-          - java.net.SocketTimeoutException                         # Socket timeout
-          - java.lang.IllegalStateException                         # LoadBalancer sem instâncias
+          - org.springframework.web.client.ResourceAccessException
+          - java.net.ConnectException                               # falha de conexão
+          - java.net.SocketTimeoutException                         # socket timeout
+          - java.lang.IllegalStateException                         # loadBalancer sem instâncias
         ignore-exceptions:
           - org.springframework.web.client.HttpClientErrorException  # 4xx - erro do cliente
-          - com.docchain.user.domain.exception.UserNotFoundException # Erro de negócio
+          - com.docchain.user.domain.exception.UserNotFoundException # erro de negócio
+          - java.util.concurrent.TimeoutException                    # Não fazer retry em timeout (IA já demorou)
     instances:
       documentService:
         base-config: default
@@ -66,19 +67,19 @@ resilience4j:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
+        wait-duration-in-open-state: 15s             # Aumentado para 15s
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
         record-exceptions:
           - org.springframework.web.client.HttpServerErrorException  # 5xx - erro do servidor
-          - org.springframework.web.client.ResourceAccessException   # Timeout, conexão
-          - java.util.concurrent.TimeoutException                    # Timeout geral
+          - org.springframework.web.client.ResourceAccessException   # timeout, conexão
+          - java.util.concurrent.TimeoutException                    # timeout geral
           - java.io.IOException                                       # IO error
-          - java.lang.IllegalStateException                          # LoadBalancer sem instâncias
+          - java.lang.IllegalStateException                          # loadBalancer sem instancias
     instances:
       documentService:
         base-config: default
-        wait-duration-in-open-state: 10s
+        wait-duration-in-open-state: 15s
 
 management:
   endpoints:
